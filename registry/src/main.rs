@@ -26,7 +26,9 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/upload", post(upload_package))
         .route("/download/{id}", get(download_package))
-        .route("/packages", get(list_packages));
+        .route("/packages", get(list_packages))
+        .route("/loader/{version}/1", get(download_loader1))
+        .route("/loader/{version}/2", get(download_loader2));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     println!("🚀 mpkg registry running at http://{addr}");
@@ -68,6 +70,35 @@ async fn upload_package(mut multipart: Multipart) -> Result<Json<Manifest>, (axu
 
 async fn download_package(Path(id): Path<String>) -> Result<axum::response::Response, (axum::http::StatusCode, String)> {
     let file_path = PathBuf::from(format!("{STORAGE_DIR}/{id}/package.zip"));
+    if !file_path.exists() {
+        return Err((axum::http::StatusCode::NOT_FOUND, "Package not found".to_string()));
+    }
+
+    let file = File::open(file_path).await.map_err(internal_error)?;
+    let stream = ReaderStream::new(file);
+    let body = axum::body::Body::from_stream(stream);
+    Ok(axum::response::Response::builder()
+        .header("Content-Type", "application/octet-stream")
+        .body(body)
+        .unwrap())
+}
+async fn download_loader2(Path(version): Path<String>) -> Result<axum::response::Response, (axum::http::StatusCode, String)> {
+    let file_path = PathBuf::from(format!("{STORAGE_DIR}/loader/{version}/mpkg-loader.mjs"));
+    if !file_path.exists() {
+        return Err((axum::http::StatusCode::NOT_FOUND, "Package not found".to_string()));
+    }
+
+    let file = File::open(file_path).await.map_err(internal_error)?;
+    let stream = ReaderStream::new(file);
+    let body = axum::body::Body::from_stream(stream);
+    Ok(axum::response::Response::builder()
+        .header("Content-Type", "application/octet-stream")
+        .body(body)
+        .unwrap())
+}
+
+async fn download_loader1(Path(version): Path<String>) -> Result<axum::response::Response, (axum::http::StatusCode, String)> {
+    let file_path = PathBuf::from(format!("{STORAGE_DIR}/loader/{version}/bootstrap.mjs"));
     if !file_path.exists() {
         return Err((axum::http::StatusCode::NOT_FOUND, "Package not found".to_string()));
     }

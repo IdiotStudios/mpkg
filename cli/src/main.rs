@@ -1,10 +1,16 @@
 use std::fs;
+use std::fs::File;
+use std::io::Write;
+use std::io::Cursor;
 use std::path::Path;
 use clap::{Parser, Subcommand};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::env;
+use zip::ZipArchive;
 
 const REGISTRY_URL: &str = "http://127.0.0.1:8080";
+const LOADER_VERSION: &str = "latest";
 
 #[derive(Parser)]
 #[command(name = "mpkg", version, about = "Package manager for Mpkg")]
@@ -15,16 +21,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Download a package from the registry
-    Install {
-        /// Package name
-        name: String,
-    },
-
-    Init {
-        /// Project Name
-        name: String,
-    }
+    Install { name: String },
+    InstallNpm { name: String },
+    Init { name: String },
+    Run { file: String, args: Vec<String>}
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,12 +38,10 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Install { name } => {
-            install_package(&name)?;
-        }
-        Commands::Init { name } => {
-            init_project(&name)?;
-        }
+        Commands::Install { name } => install_package(&name)?,
+        Commands::InstallNpm { name} => install_npm_package(&name)?,
+        Commands::Init { name } => init_project(&name)?,
+        Commands::Run { file, args } => run_js(&file, &args)?,
     }
 
     Ok(())
@@ -59,12 +57,46 @@ fn install_package(name: &str) -> Result<()> {
     }
 
     let bytes = response.bytes()?;
-    let file_path = Path::new("packages").join(format!("{name}.zip"));
-    fs::create_dir_all("packages")?;
-    fs::write(&file_path, &bytes)?;
-    println!("✅ Saved to {:?}", file_path);
+    let packages_dir = Path::new("packages");
+    fs::create_dir_all(&packages_dir)?;
+
+    let reader = Cursor::new(bytes);
+    let mut zip = ZipArchive::new(reader)?;
+
+    let package_dir = packages_dir.join(name);
+    fs::create_dir_all(&package_dir)?;
+    zip.extract(&package_dir)?;
+
+    println!("✅ Package extracted to {:?}", package_dir);
 
     update_pkg_jsonc(name)?;
+    Ok(())
+}
+
+fn install_npm_package(name: &str) -> Result<()> {
+    use std::process::Command;
+    println!("📦 Installing {} via npm...", name);
+
+    // Make sure node_modules exists
+    std::fs::create_dir_all("packages/node_modules")?;
+
+    let status = Command::new("npm")
+        .arg("install")
+        .arg(name)
+        .arg("--prefix")
+        .arg("packages/") // installs inside packages/node_modules
+        .status()?;
+
+    if !status.success() {
+        anyhow::bail!("npm install failed with status: {}", status);
+    }
+
+    // Update pkg.jsonc
+    let dep_name = format!("npm/{}", name);
+    update_pkg_jsonc(&dep_name)?;
+
+    println!("✅ Installed {} via npm", name);
+
     Ok(())
 }
 
@@ -95,19 +127,70 @@ fn update_pkg_jsonc(pkg_name: &str) -> Result<()> {
 
 fn init_project(project_name: &str) -> Result<()> {
     let path = std::path::Path::new("pkg.jsonc");
+    let gitignorepath = std::path::Path::new(".gitignore");
 
+    if gitignorepath.exists() {
+        println!(".gitignore already exists, skipping creation...");
+    } else {
+        let gitignore = "/packages\n";
+        let mut gitignore_file = File::create(".gitignore")?;
+        gitignore_file.write_all(gitignore.as_bytes())?;
+        println!("Created .gitignore");
+    }
     if path.exists() {
-        println!("⚠️ pkg.jsonc already exists, skipping creation.");
-        return Ok(());
+        println!("pkg.jsonc already exists, skipping creation...");
+    } else {
+        let pkg = PkgManifest {
+            name: project_name.to_string(),
+            version: "0.1.0".to_string(),
+            dependencies: Some(serde_json::json!({})),
+        };
+        fs::write(path, serde_json::to_string_pretty(&pkg)?)?;
+        println!("Created pkg.jsonc");
     }
 
-    let pkg = PkgManifest {
-        name: project_name.to_string(),
-        version: "0.1.0".to_string(),
-        dependencies: Some(serde_json::json!({})),
-    };
-
-    fs::write(path, serde_json::to_string_pretty(&pkg)?)?;
+    let loader_url1 = format!("{REGISTRY_URL}/loader/{LOADER_VERSION}/1");
+    let loader_url2 = format!("{REGISTRY_URL}/loader/{LOADER_VERSION}/2");
+    let loader_path1 = Path::new("packages/loader").join("bootstrap.mjs");
+    let loader_path2 = Path::new("packages/loader").join("mpkg-loader.mjs");
+    fs::create_dir_all("packages/loader")?;
+    let resp1 = reqwest::blocking::get(&loader_url1)?;
+    if !resp1.status().is_success() {
+        anyhow::bail!("Failed to download loader: {}", resp1.status());
+    }
+    let resp2 = reqwest::blocking::get(&loader_url2)?;
+    if !resp2.status().is_success() {
+        anyhow::bail!("Failed to download loader: {}", resp2.status());
+    }
+    let bytes1 = resp1.bytes()?;
+    let bytes2 = resp2.bytes()?;
+    fs::write(&loader_path1, &bytes1)?;
+    fs::write(&loader_path2, &bytes2)?;
+    println!("📝 Downloaded mpkg-loader.mjs to {:?}", loader_path2);
+    println!("📝 Downloaded bootsrap.mjs to {:?}", loader_path1);
     println!("🎉 Initialized new project: {project_name}");
     Ok(())
 }
+
+fn run_js(file: &str, args: &[String]) -> Result<()> {
+    use std::process::Command;
+
+    let loader_path = env::current_dir()?.join("packages/loader/bootstrap.mjs");
+
+    if !loader_path.exists() {
+        anyhow::bail!("Loader not found at {:?}", loader_path);
+    }
+
+    let mut cmd = Command::new("node");
+    cmd.arg(loader_path)
+       .arg(file)
+       .args(args);
+
+    let status = cmd.status()?;
+    if !status.success() {
+        anyhow::bail!("Node exited with status: {}", status);
+    }
+
+    Ok(())
+}
+
