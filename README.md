@@ -7,4 +7,4 @@ Mpkg can also be used in replacement for nodejs although this is also just a wra
 
 ## Contribution
 
-Feel free to contribute in anyway, this is just a side project
+Feel free to contribute in anyway, this is just a side project of mine.
