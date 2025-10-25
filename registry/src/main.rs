@@ -67,7 +67,7 @@ async fn upload_package(mut multipart: Multipart) -> Result<Json<Manifest>, (axu
 }
 
 async fn download_package(Path(id): Path<String>) -> Result<axum::response::Response, (axum::http::StatusCode, String)> {
-    let file_path = PathBuf::from(format!("{STORAGE_DIR}/{id}/package.tar"));
+    let file_path = PathBuf::from(format!("{STORAGE_DIR}/{id}/package.zip"));
     if !file_path.exists() {
         return Err((axum::http::StatusCode::NOT_FOUND, "Package not found".to_string()));
     }
