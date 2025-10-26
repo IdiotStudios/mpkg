@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>mpkg Registry</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        main {
+            padding: 2rem;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        .package-list {
+            margin-top: 1rem;
+            padding: 0;
+            list-style: none;
+        }
+        .package-list li {
+            background: white;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .upload-form {
+            margin-top: 2rem;
+        }
+        .upload-form input[type="file"] {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .upload-form button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🚀 mpkg Registry</h1>
+    </header>
+    <main>
+        <h2>Available Packages</h2>
+        <ul id="packages" class="package-list">
+            <!-- Packages will be populated here -->
+        </ul>
+
+        <div class="upload-form">
+            <h2>Upload Package</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <label>Manifest (JSON):</label>
+                <input type="file" name="manifest" accept=".json" required>
+                <label>Package File (.zip):</label>
+                <input type="file" name="file" accept=".zip" required>
+                <button type="submit">Upload</button>
+            </form>
+            <p id="status"></p>
+        </div>
+    </main>
+
+    <script>
+        async function fetchPackages() {
+            const res = await fetch('/packages');
+            const packages = await res.json();
+            const ul = document.getElementById('packages');
+            ul.innerHTML = '';
+            packages.forEach(pkg => {
+                const li = document.createElement('li');
+                li.textContent = pkg;
+                ul.appendChild(li);
+            });
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = new FormData(form);
+            const status = document.getElementById('status');
+            try {
+                const res = await fetch('/upload', {
+                    method: 'POST',
+                    body: data
+                });
+                if (res.ok) {
+                    status.textContent = '✅ Upload successful!';
+                    fetchPackages();
+                } else {
+                    status.textContent = '❌ Upload failed!';
+                }
+            } catch (err) {
+                status.textContent = '❌ Upload failed!';
+                console.error(err);
+            }
+        });
+
+        fetchPackages();
+    </script>
+</body>
+</html>

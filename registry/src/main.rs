@@ -9,6 +9,7 @@ use tokio::{fs::File, io::AsyncWriteExt};
 use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 use anyhow::Result;
+use axum::response::Html;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Manifest {
@@ -26,11 +27,12 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/upload", post(upload_package))
         .route("/download/{id}", get(download_package))
+        .route("/", get(root))
         .route("/packages", get(list_packages))
         .route("/loader/{version}/1", get(download_loader1))
         .route("/loader/{version}/2", get(download_loader2));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 7009));
     println!("🚀 mpkg registry running at http://{addr}");
     axum::serve(
         tokio::net::TcpListener::bind(addr).await?,
@@ -39,6 +41,13 @@ async fn main() -> Result<()> {
     .await?;
 
     Ok(())
+}
+
+async fn root() -> Html<String> {
+    let content = fs::read_to_string("views/index.html")
+        .unwrap_or_else(|_| "<h1>Failed to load file</h1>".to_string());
+    
+    Html(content)
 }
 
 async fn upload_package(mut multipart: Multipart) -> Result<Json<Manifest>, (axum::http::StatusCode, String)> {
@@ -54,7 +63,7 @@ async fn upload_package(mut multipart: Multipart) -> Result<Json<Manifest>, (axu
             let data = field.text().await.map_err(internal_error)?;
             manifest = Some(serde_json::from_str(&data).map_err(internal_error)?);
         } else if name == "file" {
-            let file_path = package_dir.join("package.tar");
+            let file_path = package_dir.join("package.zip");
             let mut file = File::create(&file_path).await.map_err(internal_error)?;
             let mut field_data = field;
             while let Some(chunk) = field_data.chunk().await.map_err(internal_error)? {

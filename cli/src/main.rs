@@ -8,8 +8,11 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::env;
 use zip::ZipArchive;
+use zip::write::FileOptions;
+use zip::CompressionMethod;
+use walkdir::WalkDir;
 
-const REGISTRY_URL: &str = "http://127.0.0.1:8080";
+const REGISTRY_URL: &str = "http://127.0.0.1:7009"; //"http://mpkg.idiotstudios.co.za";
 const LOADER_VERSION: &str = "latest";
 
 #[derive(Parser)]
@@ -24,7 +27,8 @@ enum Commands {
     Install { name: String },
     InstallNpm { name: String },
     Init { name: String },
-    Run { file: String, args: Vec<String>}
+    Run { file: String, args: Vec<String>},
+    Package { file: String, output: Option<String> }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -42,8 +46,45 @@ fn main() -> Result<()> {
         Commands::InstallNpm { name} => install_npm_package(&name)?,
         Commands::Init { name } => init_project(&name)?,
         Commands::Run { file, args } => run_js(&file, &args)?,
+        Commands::Package { file , output} => {
+            let output_file = output.unwrap_or_else(|| {
+                let base = Path::new(&file)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string();
+                format!("{}.zip", base)
+            });
+            create_zip(&file, &output_file)?
+        }
     }
 
+    Ok(())
+}
+
+
+fn create_zip<P: AsRef<Path>>(source: P, output: P) -> Result<()> {
+    let file = File::create(&output)?;
+    let mut zip = zip::ZipWriter::new(file);
+    let options: FileOptions<'_ , ()> = FileOptions::default()
+        .compression_method(CompressionMethod::Deflated);
+
+    let base_path = source.as_ref();
+
+    for entry in WalkDir::new(base_path) {
+        let entry = entry?;
+        let path = entry.path();
+        let name = path.strip_prefix(base_path)?.to_string_lossy();
+
+        if path.is_file() {
+            zip.start_file(name.replace("\\", "/"), options)?;
+            std::io::copy(&mut std::fs::File::open(path)?, &mut zip)?;
+        } else if !name.is_empty() {
+            zip.add_directory(name.replace("\\", "/") + "/", options)?;
+        }
+    }
+
+    zip.finish()?;
     Ok(())
 }
 
