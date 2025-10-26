@@ -52,12 +52,12 @@ async fn root() -> Html<String> {
 
 async fn upload_package(mut multipart: Multipart) -> Result<Json<Manifest>, (axum::http::StatusCode, String)> {
     let mut manifest: Option<Manifest> = None;
-    let package_id = Uuid::new_v4().to_string();
-    let package_dir = PathBuf::from(format!("{STORAGE_DIR}/{package_id}"));
-    fs::create_dir_all(&package_dir).map_err(internal_error)?;
 
     while let Some(field) = multipart.next_field().await.map_err(internal_error)? {
         let name = field.name().unwrap_or_default().to_string();
+        let package_id = Uuid::new_v4().to_string();
+        let package_dir = PathBuf::from(format!("{STORAGE_DIR}/{package_id}"));
+        fs::create_dir_all(&package_dir).map_err(internal_error)?;
 
         if name == "manifest" {
             let data = field.text().await.map_err(internal_error)?;

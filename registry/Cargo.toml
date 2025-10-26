@@ -13,3 +13,4 @@ serde_json = "1.0"
 uuid = { version = "1.8", features = ["v4"] }
 anyhow = "1.0"
 zip = "6.0.0"
+lazy_static = "1.4"
