@@ -1,0 +1,22 @@
+<h2>Search Registry</h2>
+<form method="GET" action="/search">
+  <input name="q" placeholder="Search..." value="<%= q %>">
+  <button>Search</button>
+</form>
+
+<% if (results.length === 0) { %>
+  <p class="empty">No packages yet.</p>
+<% } else { %>
+  <ul class="package-list">
+    <% results.forEach(r => { %>
+      <li class="package">
+        <div class="pkg-header">
+          <h3><a href="/package/<%= r.name %>"><%= r.name %></a></h3>
+          <span class="pkg-version">v<%= r.version %></span>
+        </div>
+        <p class="pkg-desc"><%= r.description || "No description provided." %></p>
+        <p class="pkg-author">by <%= r.author || "Anon" %></p>
+      </li>
+    <% }) %>
+  </ul>
+<% } %>

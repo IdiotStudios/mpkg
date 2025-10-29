@@ -1,0 +1,179 @@
+/* ==== GLOBAL ==== */
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --text: #e6edf3;
+  --accent: #58a6ff;
+  --border: #30363d;
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==== HEADER ==== */
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+nav a {
+  color: var(--accent);
+  margin-left: 1.2rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+nav a:hover {
+  color: #9ecbff;
+}
+
+/* ==== MAIN ==== */
+main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* ==== FORMS ==== */
+form {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+input, button {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #0d1117;
+  color: var(--text);
+  margin-top: 0.8rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+button:hover {
+  background: #388bff;
+}
+
+/* ==== FOOTER ==== */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* ==== PACKAGE LIST ==== */
+
+h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #9ecbff;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+}
+
+.empty {
+  color: #888;
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.package-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.package {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  transition: border-color 0.2s, transform 0.1s ease;
+}
+
+.package:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.pkg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pkg-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.pkg-header a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pkg-header a:hover {
+  text-decoration: underline;
+}
+
+.pkg-version {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.pkg-desc {
+  margin: 0.5rem 0;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+.pkg-author {
+  color: #888;
+  font-size: 0.85rem;
+}

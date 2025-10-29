@@ -1,0 +1,18 @@
+<h2>Available Packages</h2>
+
+<% if (packages.length === 0) { %>
+  <p class="empty">No packages yet.</p>
+<% } else { %>
+  <ul class="package-list">
+    <% packages.forEach(pkg => { %>
+      <li class="package">
+        <div class="pkg-header">
+          <h3><a href="/package/<%= pkg.name %>"><%= pkg.name %></a></h3>
+          <span class="pkg-version">v<%= pkg.version %></span>
+        </div>
+        <p class="pkg-desc"><%= pkg.description || "No description provided." %></p>
+        <p class="pkg-author">by <%= pkg.author || "Anon" %></p>
+      </li>
+    <% }) %>
+  </ul>
+<% } %>
