@@ -6,12 +6,14 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import expressLayouts from "express-ejs-layouts";
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
+dotenv.config()
 
 // ---- Directories ----
 const STORAGE_DIR = path.resolve(__dirname, "../storage");
@@ -32,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   session({
-    secret: "super-secret-key",
+    secret: "process.env.secret",
     resave: false,
     saveUninitialized: false,
   })

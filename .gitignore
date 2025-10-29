@@ -3,3 +3,5 @@
 /runtime/target
 /target
 /registry/website/node_modules
+/registry/website/.env
+/registry/website/data
