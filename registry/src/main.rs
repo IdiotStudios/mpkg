@@ -19,6 +19,7 @@ struct Manifest {
 }
 
 const STORAGE_DIR: &str = "./storage";
+const LOADER_DIR: &str = "./loader";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -92,7 +93,7 @@ async fn download_package(Path(id): Path<String>) -> Result<axum::response::Resp
         .unwrap())
 }
 async fn download_loader2(Path(version): Path<String>) -> Result<axum::response::Response, (axum::http::StatusCode, String)> {
-    let file_path = PathBuf::from(format!("{STORAGE_DIR}/loader/{version}/mpkg-loader.mjs"));
+    let file_path = PathBuf::from(format!("{LOADER_DIR}/{version}/mpkg-loader.mjs"));
     if !file_path.exists() {
         return Err((axum::http::StatusCode::NOT_FOUND, "Package not found".to_string()));
     }
@@ -107,7 +108,7 @@ async fn download_loader2(Path(version): Path<String>) -> Result<axum::response:
 }
 
 async fn download_loader1(Path(version): Path<String>) -> Result<axum::response::Response, (axum::http::StatusCode, String)> {
-    let file_path = PathBuf::from(format!("{STORAGE_DIR}/loader/{version}/bootstrap.mjs"));
+    let file_path = PathBuf::from(format!("{LOADER_DIR}/{version}/bootstrap.mjs"));
     if !file_path.exists() {
         return Err((axum::http::StatusCode::NOT_FOUND, "Package not found".to_string()));
     }
