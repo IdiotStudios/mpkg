@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unix-artifact
-          path: dist/*.zip
+          path: src/dist/*.zip
 
   # --- Windows ---
   build-windows:
