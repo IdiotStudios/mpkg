@@ -8,6 +8,8 @@ Mpkg can also be used in replacement for nodejs although this is also just a wra
 
 ## Info
 
+You can upload and view packages at mpkg.idiotstudios.co.za
+
 Mpkg consists of a few things, the cli and the registry.
 
 The website is a work in progress at the moment. (have not started)
@@ -15,7 +17,7 @@ The website is a work in progress at the moment. (have not started)
 The cli can be used as follows:
 
 ```bash
-mpkg install <package-name> // Installs any package in the default mpkg registry (not hosted yet)
+mpkg install <package-name> // Installs any package in the default mpkg registry
 
 mpkg install-npm <package-name> // Installs any npm package via an npm wrapper
 
