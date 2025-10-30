@@ -34,7 +34,7 @@ To install on any platform, download the latest release zip file for your operat
 Then unzip the file and cd into its directory.
 After those steps, run the following command to install:
 
-``bash
+```bash
 bash install.sh
 ```
 
