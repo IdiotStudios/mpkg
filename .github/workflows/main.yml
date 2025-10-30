@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unix-artifact
-          path: src/dist/*.zip
+          path: cli/dist/*.zip
 
   # --- Windows ---
   build-windows:
@@ -95,4 +95,4 @@ jobs:
         with:
           files: dist/**/*.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
