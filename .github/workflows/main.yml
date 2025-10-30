@@ -57,9 +57,11 @@ jobs:
 
       - name: Install cargo-wix
         run: cargo install cargo-wix
+        working-directory: ./cli
 
       - name: Generate MSI installer
         run: cargo wix
+        working-directory: ./cli
 
       - name: Package EXE + MSI
         run: |
