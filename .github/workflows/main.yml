@@ -23,6 +23,7 @@ jobs:
           
       - name: Build release
         run: cargo build --release
+        working-directory: ./cli
 
       - name: Package binary
         run: |
@@ -32,6 +33,7 @@ jobs:
           cp target/release/$BIN_NAME dist/
           cp install.sh dist/
           zip -r dist/${BIN_NAME}-${OS_NAME}-x86_64.zip dist/*
+        working-directory: ./cli
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
