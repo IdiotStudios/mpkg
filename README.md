@@ -26,6 +26,18 @@ mpkg run <server.js> // will run anything that nodejs would be able to run via a
 
 The Registry can be used by api requests, but I am not going to go into that here
 
+## Installation
+
+In every release, aka the windows and linux releases, there is a install.sh file
+
+To install on any platform, download the latest release zip file for your operating system.
+Then unzip the file and cd into its directory.
+After those steps, run the following command to install:
+
+``bash
+bash install.sh
+```
+
 ## Usage
 
 Mpkg can only be used for ESM not CommonJs, but lets be honest, no one likes CommonJs anyway...

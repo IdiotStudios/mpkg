@@ -1,0 +1,92 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'   # Trigger on version tags like v1.0.0
+
+jobs:
+  # --- Linux/macOS ---
+  build-unix:
+    name: Build Linux/macOS
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+          
+      - name: Build release
+        run: cargo build --release
+
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          BIN_NAME=mpkg
+          OS_NAME=$(uname | tr '[:upper:]' '[:lower:]')
+          cp target/release/$BIN_NAME dist/
+          cp install.sh dist/
+          zip -r dist/${BIN_NAME}-${OS_NAME}-x86_64.zip dist/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unix-artifact
+          path: dist/*.zip
+
+  # --- Windows ---
+  build-windows:
+    name: Build Windows MSI
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+
+      - name: Build release binary
+        run: cargo build --release --target x86_64-pc-windows-gnu
+
+      - name: Install cargo-wix
+        run: cargo install cargo-wix
+
+      - name: Generate MSI installer
+        run: cargo wix
+
+      - name: Package EXE + MSI
+        run: |
+          mkdir dist
+          cp target/x86_64-pc-windows-gnu/release/mpkg.exe dist/
+          cp target/wix/mpkg*.msi dist/
+          cp install.ps1 dist/
+          powershell Compress-Archive -Path dist/* -DestinationPath mpkg-windows-x86_64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact
+          path: mpkg-windows-x86_64.zip
+
+  # --- Create GitHub Release ---
+  release:
+    needs: [build-unix, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
