@@ -72,6 +72,7 @@ jobs:
           cp target/wix/mpkg*.msi dist/
           cp install.ps1 dist/
           powershell Compress-Archive -Path dist/* -DestinationPath mpkg-windows-x86_64.zip
+        working-directory: ./cli
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
