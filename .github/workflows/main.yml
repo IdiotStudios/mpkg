@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifact
-          path: mpkg-windows-x86_64.zip
+          path: cli/mpkg-windows-x86_64.zip
 
   # --- Create GitHub Release ---
   release:
