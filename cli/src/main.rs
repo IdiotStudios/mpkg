@@ -12,7 +12,7 @@ use zip::write::FileOptions;
 use zip::CompressionMethod;
 use walkdir::WalkDir;
 
-const REGISTRY_URL: &str = "http://mpkg.idiotstudios.co.za";
+const REGISTRY_URL: &str = "http://mpkg.idiotstudios.co.za/api/";
 const LOADER_VERSION: &str = "latest";
 
 #[derive(Parser)]
