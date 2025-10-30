@@ -53,6 +53,7 @@ jobs:
 
       - name: Build release binary
         run: cargo build --release --target x86_64-pc-windows-gnu
+        working-directory: ./cli
 
       - name: Install cargo-wix
         run: cargo install cargo-wix
@@ -63,9 +64,9 @@ jobs:
       - name: Package EXE + MSI
         run: |
           mkdir dist
-          cp cli/target/x86_64-pc-windows-gnu/release/mpkg.exe dist/
-          cp cli/target/wix/mpkg*.msi dist/
-          cp cli/install.ps1 dist/
+          cp target/x86_64-pc-windows-gnu/release/mpkg.exe dist/
+          cp target/wix/mpkg*.msi dist/
+          cp install.ps1 dist/
           powershell Compress-Archive -Path dist/* -DestinationPath mpkg-windows-x86_64.zip
 
       - name: Upload artifact
