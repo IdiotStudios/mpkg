@@ -2,6 +2,7 @@
 name = "mpkg"
 version = "0.2.0"
 edition = "2021"
+authors = ["IdiotStudios"]
 
 [dependencies]
 reqwest = { version = "0.12", features = ["json", "blocking"] }
