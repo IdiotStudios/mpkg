@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
         .route("/loader/{version}/1", get(download_loader1))
         .route("/loader/{version}/2", get(download_loader2));
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 7009));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 7002));
     println!("🚀 mpkg registry running at http://{addr}");
     axum::serve(
         tokio::net::TcpListener::bind(addr).await?,
