@@ -4,7 +4,6 @@ use std::io::Write;
 use std::io::Cursor;
 use std::path::Path;
 use std::process::Command as ProcessCommand;
-use std::os::unix::fs::PermissionsExt;
 use clap::{Parser, Subcommand};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -111,9 +110,17 @@ fn update_self() -> Result<()> {
     let tmp_path = exe_path.with_extension("update");
 
     std::fs::write(&tmp_path, &bytes)?;
-    #[cfg(unix)]
+    #[cfg(unix)] // Linux/macOS
     {
-        let perms = fs::Permissions::from_mode(0o755);
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&tmp_path, fs::Permissions::from_mode(0o755))?;
+    }
+
+    #[cfg(windows)] // Windows
+    {
+        // On Windows, just make sure the file is writable
+        let mut perms = fs::metadata(&tmp_path)?.permissions();
+        perms.set_readonly(false);
         fs::set_permissions(&tmp_path, perms)?;
     }
 
