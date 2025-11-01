@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::Write;
 use std::io::Cursor;
 use std::path::Path;
+use std::process::Command as ProcessCommand;
+use std::os::unix::fs::PermissionsExt;
 use clap::{Parser, Subcommand};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -28,7 +30,8 @@ enum Commands {
     InstallNpm { name: String },
     Init { name: String },
     Run { file: String, args: Vec<String>},
-    Package { file: String, output: Option<String> }
+    Package { file: String, output: Option<String> },
+    Update
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -57,11 +60,86 @@ fn main() -> Result<()> {
             });
             create_zip(&file, &output_file)?
         }
+        Commands::Update => update_self()?
     }
 
     Ok(())
 }
 
+fn update_self() -> Result<()> {
+    use std::time::Duration;
+    let repo = "idiotstudios/mpkg";
+    let current_version = env!("CARGO_PKG_VERSION");
+    let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(15))
+        .user_agent("mpkg-updater")
+        .build()?;
+
+    println!("🔍 Checking for updates...");
+    let resp: serde_json::Value = client
+        .get(format!("https://api.github.com/repos/{repo}/releases/latest"))
+        .send()?
+        .json()?;
+
+    let latest_tag = resp["tag_name"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("Failed to read release tag"))?;
+
+    if latest_tag == current_version {
+        println!("✅ Already up to date ({})", current_version);
+        return Ok(());
+    }
+
+    println!("⬇️  Found new version: {}", latest_tag);
+
+    let os = std::env::consts::OS;
+    let arch = std::env::consts::ARCH;
+    let pattern = format!("mpkg-{os}-{arch}");
+    let asset_url = resp["assets"]
+        .as_array()
+        .and_then(|arr| {
+            arr.iter()
+                .find_map(|a| a["browser_download_url"].as_str())
+                .filter(|url| url.contains(&pattern))
+        })
+        .ok_or_else(|| anyhow::anyhow!("No asset found for {os}-{arch}"))?;
+
+    println!("📦 Downloading binary for {os}/{arch}...");
+    let bytes = client.get(asset_url).send()?.bytes()?;
+
+    let exe_path = std::env::current_exe()?;
+    let tmp_path = exe_path.with_extension("update");
+
+    std::fs::write(&tmp_path, &bytes)?;
+    #[cfg(unix)]
+    {
+        let perms = fs::Permissions::from_mode(0o755);
+        fs::set_permissions(&tmp_path, perms)?;
+    }
+
+    // Windows can't overwrite a running binary
+    if cfg!(windows) {
+        println!("♻️  Restarting updater...");
+        ProcessCommand::new("cmd")
+            .args([
+                "/C",
+                &format!(
+                    "timeout /t 1 >nul & move /Y \"{}\" \"{}\" & start \"\" \"{}\"",
+                    tmp_path.display(),
+                    exe_path.display(),
+                    exe_path.display()
+                ),
+            ])
+            .spawn()?;
+    } else {
+        fs::rename(&tmp_path, &exe_path)?;
+        println!("✅ Updated successfully!");
+        println!("🔄 Restarting...");
+        ProcessCommand::new(exe_path).spawn()?;
+    }
+
+    Ok(())
+}
 
 fn create_zip<P: AsRef<Path>>(source: P, output: P) -> Result<()> {
     let file = File::create(&output)?;
