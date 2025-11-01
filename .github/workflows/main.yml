@@ -95,4 +95,4 @@ jobs:
         with:
           files: dist/**/*.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_TOKEN }}
