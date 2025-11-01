@@ -10,42 +10,46 @@ Mpkg can also be used in replacement for nodejs although this is also just a wra
 
 You can upload and view packages at mpkg.idiotstudios.co.za
 
-Mpkg consists of a few things, the cli and the registry.
+Mpkg consists of a few things, the cli, registry and website.
 
-The website is a work in progress at the moment. (have not started)
-
-The cli can be used as follows:
-
-```bash
-mpkg install <package-name> // Installs any package in the default mpkg registry
-
-mpkg install-npm <package-name> // Installs any npm package via an npm wrapper
-
-mpkg init <project-name> // will initialize the directory it is run in by adding a gitignore and a pkg.jsoc
-
-mpkg run <server.js> // will run anything that nodejs would be able to run via a wrapper
-```
-
-The Registry can be used by api requests, but I am not going to go into that here
+The website it a work in progress as the server's backend it being rebuilt
 
 ## Installation
 
-In every release, aka the windows and linux releases, there is a install.sh file
-
-To install on any platform, download the latest release zip file for your operating system.
-Then unzip the file and cd into its directory.
-After those steps, run the following command to install:
+In every linux/macOS release, there is an install.sh, running this file as follows will install mpkg:
 
 ```bash
 bash install.sh
 ```
 
+On Windows you can run the msi file included which will install it systemwide and add it to path.
+
 ## Usage
 
 Mpkg can only be used for ESM not CommonJs, but lets be honest, no one likes CommonJs anyway...
 
-I basically covered this in Info so Im not going to go more into Usage
+To install any package that is in the mpkg registry, run the following:
+```bash
+mpkg install <package-name>
+```
+
+To install any package that is in the npm registry, run the following:
+```bash
+mpkg install-npm <package-name>
+```
+Npm must be pre-installed as we have no implmented a proper npm system yet.
+
+To initialize a directory you can run the following:
+```bash
+mpkg init <project-name>
+```
+
+To run any javascript file, use the follwing:
+```bash
+mpkg run <server.js>
+```
+Nodejs must be installed as we have no implmented our own version as of yet.
 
 ## Contribution
 
-Feel free to contribute in anyway, this is just a side project of mine.
+Feel free to contribute in anyway via issues and or pull requests.
